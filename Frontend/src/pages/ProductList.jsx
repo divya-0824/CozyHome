@@ -6,6 +6,8 @@ import { useSearchParams } from "react-router-dom";
 import { fetchProducts } from "../features/products/productsSlice";
 import ProductCard from "../components/ProductCard";
 
+const PRODUCTS_PER_PAGE = 9;
+
 export default function ProductList() {
   const dispatch = useDispatch();
 
@@ -16,6 +18,10 @@ export default function ProductList() {
   const [searchParams] = useSearchParams();
 
   const [sort, setSort] = useState("default");
+  const [paginationState, setPaginationState] = useState({
+    key: "",
+    page: 1,
+  });
 
   const [draftFilters, setDraftFilters] = useState({
     categories: [],
@@ -112,6 +118,16 @@ export default function ProductList() {
 
     return result;
   }, [items, activeFilters, sort, search]);
+
+  const paginationKey = JSON.stringify({ activeFilters, search, sort });
+  const currentPage =
+    paginationState.key === paginationKey ? paginationState.page : 1;
+  const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
+  const visiblePage = Math.min(currentPage, Math.max(totalPages, 1));
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (visiblePage - 1) * PRODUCTS_PER_PAGE;
+    return filteredProducts.slice(startIndex, startIndex + PRODUCTS_PER_PAGE);
+  }, [filteredProducts, visiblePage]);
 
   // Toggle category selection
   function toggleCategory(category) {
@@ -343,17 +359,74 @@ export default function ProductList() {
             {!loading && !error && (
               <>
                 <p>
-                  {filteredProducts.length} products found
+                  Showing {filteredProducts.length === 0 ? 0 : (visiblePage - 1) * PRODUCTS_PER_PAGE + 1}
+                  {"–"}
+                  {Math.min(visiblePage * PRODUCTS_PER_PAGE, filteredProducts.length)} of{" "}
+                  {filteredProducts.length} products
                 </p>
 
                 <div className="product-grid">
-                  {filteredProducts.map((product) => (
+                  {paginatedProducts.map((product) => (
                     <ProductCard
                       key={product._id || product.id}
                       product={product}
                     />
                   ))}
                 </div>
+
+                {totalPages > 1 && (
+                  <nav className="pagination" aria-label="Product pages">
+                    <button
+                      type="button"
+                      className="pagination-arrow"
+                      aria-label="Go to previous page"
+                      disabled={visiblePage === 1}
+                      onClick={() =>
+                        setPaginationState({
+                          key: paginationKey,
+                          page: visiblePage - 1,
+                        })
+                      }
+                    >
+                      &larr;
+                    </button>
+
+                    {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+                      (page) => (
+                        <button
+                          type="button"
+                          key={page}
+                          className={`pagination-page${page === visiblePage ? " pagination-page-active" : ""}`}
+                          aria-label={`Go to page ${page}`}
+                          aria-current={page === visiblePage ? "page" : undefined}
+                          onClick={() =>
+                            setPaginationState({
+                              key: paginationKey,
+                              page,
+                            })
+                          }
+                        >
+                          {page}
+                        </button>
+                      )
+                    )}
+
+                    <button
+                      type="button"
+                      className="pagination-arrow"
+                      aria-label="Go to next page"
+                      disabled={visiblePage === totalPages}
+                      onClick={() =>
+                        setPaginationState({
+                          key: paginationKey,
+                          page: visiblePage + 1,
+                        })
+                      }
+                    >
+                      &rarr;
+                    </button>
+                  </nav>
+                )}
               </>
             )}
 

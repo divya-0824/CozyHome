@@ -311,6 +311,46 @@ button {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 30px;
+}
+
+.pagination button {
+  min-width: 40px;
+  height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: white;
+  color: var(--text);
+}
+
+.pagination button:hover:not(:disabled) {
+  border-color: #4338ca;
+  color: #4338ca;
+}
+
+.pagination .pagination-page-active {
+  border-color: #4338ca;
+  background: #4338ca;
+  color: white;
+}
+
+.pagination button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.pagination button:focus-visible {
+  outline: 2px solid #4338ca;
+  outline-offset: 2px;
+}
+
 .product-card {
   background: white;
   border: 1px solid var(--border);
