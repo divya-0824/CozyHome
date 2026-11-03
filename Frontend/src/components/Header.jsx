@@ -1,3 +1,4 @@
+
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../features/auth/authSlice";
@@ -14,10 +15,16 @@ export default function Header() {
     0
   );
 
+  // Search using the existing search bar
   function handleSearch(event) {
-    if (event.key === "Enter") {
-      navigate(`/?search=${encodeURIComponent(event.target.value)}`);
-    }
+    const value = event.target.value;
+
+    navigate(
+      value.trim()
+        ? `/?search=${encodeURIComponent(value.trim())}`
+        : "/",
+      { replace: true }
+    );
   }
 
   return (
@@ -29,7 +36,7 @@ export default function Header() {
       <input
         className="search"
         placeholder="Search home decor..."
-        onKeyDown={handleSearch}
+        onChange={handleSearch}
       />
 
       <nav>
@@ -38,7 +45,10 @@ export default function Header() {
 
         {user ? (
           <>
-            <span className="welcome">Hi, {user.name || "User"}</span>
+            <span className="welcome">
+              Hi, {user.name || "User"}
+            </span>
+
             <button
               className="nav-button"
               onClick={() => {

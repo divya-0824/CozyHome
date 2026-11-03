@@ -1,6 +1,8 @@
+
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+
 import {
   increaseQuantity,
   decreaseQuantity,
@@ -10,7 +12,13 @@ import {
 
 export default function Cart() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const { items, coupon } = useSelector((state) => state.cart);
+
+  // Check whether the user is logged in
+  const token = useSelector((state) => state.auth.token);
+
   const [couponInput, setCouponInput] = useState("");
 
   const subtotal = items.reduce(
@@ -34,6 +42,21 @@ export default function Cart() {
     }
   }
 
+  // Checkout login protection
+  function handleCheckout() {
+    if (!token) {
+      alert("Please login to continue checkout.");
+
+      navigate("/login", {
+        state: { from: "/cart" },
+      });
+
+      return;
+    }
+
+    alert("Checkout and payment are not connected yet.");
+  }
+
   return (
     <main className="cart-page">
       <h1>Your Shopping Cart</h1>
@@ -41,7 +64,10 @@ export default function Cart() {
       {items.length === 0 ? (
         <div className="empty-cart">
           <p>Your cart is waiting for something beautiful.</p>
-          <Link to="/" className="primary-button">Continue Shopping</Link>
+
+          <Link to="/" className="primary-button">
+            Continue Shopping
+          </Link>
         </div>
       ) : (
         <div className="cart-layout">
@@ -58,12 +84,23 @@ export default function Cart() {
 
                   <div className="cart-item-info">
                     <h3>{item.name}</h3>
+
                     <p>₹{item.price}</p>
 
                     <div className="quantity">
-                      <button onClick={() => dispatch(decreaseQuantity(id))}>−</button>
+                      <button
+                        onClick={() => dispatch(decreaseQuantity(id))}
+                      >
+                        −
+                      </button>
+
                       <span>{item.quantity}</span>
-                      <button onClick={() => dispatch(increaseQuantity(id))}>+</button>
+
+                      <button
+                        onClick={() => dispatch(increaseQuantity(id))}
+                      >
+                        +
+                      </button>
                     </div>
                   </div>
 
@@ -84,24 +121,53 @@ export default function Cart() {
             <div className="coupon">
               <input
                 value={couponInput}
-                onChange={(event) => setCouponInput(event.target.value)}
+                onChange={(event) =>
+                  setCouponInput(event.target.value)
+                }
                 placeholder="Enter SAVE10"
               />
-              <button onClick={handleCoupon}>Apply</button>
+
+              <button onClick={handleCoupon}>
+                Apply
+              </button>
             </div>
 
-            <p>Subtotal <span>₹{subtotal.toFixed(2)}</span></p>
-            <p>Discount <span>-₹{discount.toFixed(2)}</span></p>
-            <p>Shipping <span>{shipping === 0 ? "FREE" : `₹${shipping}`}</span></p>
+            <p>
+              Subtotal
+              <span>₹{subtotal.toFixed(2)}</span>
+            </p>
+
+            <p>
+              Discount
+              <span>-₹{discount.toFixed(2)}</span>
+            </p>
+
+            <p>
+              Shipping
+              <span>
+                {shipping === 0 ? "FREE" : `₹${shipping}`}
+              </span>
+            </p>
+
             <hr />
-            <h3>Total <span>₹{total.toFixed(2)}</span></h3>
+
+            <h3>
+              Total
+              <span>₹{total.toFixed(2)}</span>
+            </h3>
 
             <button
               className="primary-button checkout-button"
-              onClick={() => alert("Checkout and payment are not connected yet.")}
+              onClick={handleCheckout}
             >
               Proceed to Checkout
             </button>
+
+            {!token && (
+              <p className="login-note">
+                Login is required to proceed with checkout.
+              </p>
+            )}
           </aside>
         </div>
       )}
