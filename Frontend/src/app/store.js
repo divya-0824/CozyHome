@@ -1,10 +1,23 @@
+
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import { persistStore, persistReducer } from "redux-persist";
-import storage from "redux-persist/lib/storage";
 
 import productsReducer from "../features/products/productsSlice";
 import cartReducer from "../features/cart/cartSlice";
 import authReducer from "../features/auth/authSlice";
+
+// Use browser localStorage directly
+const storage = {
+  getItem: (key) => Promise.resolve(window.localStorage.getItem(key)),
+  setItem: (key, value) => {
+    window.localStorage.setItem(key, value);
+    return Promise.resolve(value);
+  },
+  removeItem: (key) => {
+    window.localStorage.removeItem(key);
+    return Promise.resolve();
+  },
+};
 
 const rootReducer = combineReducers({
   products: productsReducer,
@@ -18,7 +31,10 @@ const persistConfig = {
   whitelist: ["cart", "auth"],
 };
 
-const persistedReducer = persistReducer(persistConfig, rootReducer);
+const persistedReducer = persistReducer(
+  persistConfig,
+  rootReducer
+);
 
 export const store = configureStore({
   reducer: persistedReducer,
