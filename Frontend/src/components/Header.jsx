@@ -10,12 +10,13 @@ export default function Header() {
   const cartItems = useSelector((state) => state.cart.items);
   const user = useSelector((state) => state.auth.user);
 
+  const compareItems = useSelector((state) => state.compare.items);
+
   const cartCount = cartItems.reduce(
     (total, item) => total + item.quantity,
     0
   );
 
-  // Search using the existing search bar
   function handleSearch(event) {
     const value = event.target.value;
 
@@ -41,7 +42,18 @@ export default function Header() {
 
       <nav>
         <Link to="/">Home</Link>
-        <Link to="/cart">Cart ({cartCount})</Link>
+
+        <Link to="/cart">
+          Cart ({cartCount})
+        </Link>
+
+        <Link to="/dream-collection">
+          ♡ Dream Collection
+        </Link>
+
+        <Link to="/compare">
+          Compare ({compareItems.length})
+        </Link>
 
         {user ? (
           <>

@@ -1,0 +1,173 @@
+
+.dream-page {
+  min-height: 80vh;
+  padding: 40px 6%;
+  background: var(--cream, #f7f0e8);
+  color: var(--text, #302b27);
+}
+
+.dream-heading {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.dream-heading h1 {
+  color: var(--primary-dark, #70452f);
+  font-size: 32px;
+}
+
+.dream-heading p {
+  color: #78685b;
+}
+
+.dream-create-form {
+  display: flex;
+  gap: 12px;
+  max-width: 650px;
+  margin: 0 auto 25px;
+}
+
+.dream-create-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #d7c4b2;
+  border-radius: 8px;
+  background: white;
+}
+
+.dream-create-form button,
+.dream-actions button,
+.dream-product button {
+  background: var(--primary, #9b684b);
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.dream-create-form button:hover,
+.dream-actions button:hover,
+.dream-product button:hover {
+  background: var(--primary-dark, #70452f);
+}
+
+.dream-actions .dream-delete {
+  background: #a94d40;
+}
+
+.dream-message,
+.dream-error,
+.dream-loading {
+  text-align: center;
+  margin: 15px 0;
+}
+
+.dream-message {
+  color: #53734b;
+}
+
+.dream-error {
+  color: #b33a32;
+}
+
+.dream-empty {
+  text-align: center;
+  padding: 45px 20px;
+  background: #fffaf5;
+  border-radius: 12px;
+}
+
+.dream-empty h2 {
+  color: var(--primary-dark, #70452f);
+}
+
+.dream-collections-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 25px;
+}
+
+.dream-collection-card {
+  background: #fffaf5;
+  padding: 22px;
+  border: 1px solid #e4d4c5;
+  border-radius: 14px;
+  box-shadow: 0 4px 15px rgba(90, 60, 40, 0.06);
+}
+
+.dream-collection-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.dream-collection-header h2 {
+  color: var(--primary-dark, #70452f);
+  margin: 0;
+}
+
+.dream-collection-header p {
+  color: #887467;
+}
+
+.dream-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.dream-products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 20px;
+}
+
+.dream-product {
+  background: white;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #eee0d2;
+  text-align: center;
+}
+
+.dream-product a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.dream-product img {
+  width: 100%;
+  height: 170px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.dream-product h3 {
+  font-size: 15px;
+  margin: 12px 0 5px;
+}
+
+.dream-product p {
+  color: var(--primary-dark, #70452f);
+  font-weight: bold;
+}
+
+.dream-empty-products {
+  text-align: center;
+  padding: 25px;
+  color: #887467;
+}
+
+@media (max-width: 600px) {
+  .dream-create-form {
+    flex-direction: column;
+  }
+
+  .dream-collection-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

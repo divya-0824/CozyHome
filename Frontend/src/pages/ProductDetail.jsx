@@ -1,297 +1,437 @@
-// import { useEffect } from "react";
-// import { Link, useParams } from "react-router-dom";
-// import { useDispatch, useSelector } from "react-redux";
-// import {
-//   fetchProductById,
-//   clearSelectedProduct,
-// } from "../features/products/productsSlice";
-// import { addToCart } from "../features/cart/cartSlice";
-
-// export default function ProductDetail() {
-//   const { id } = useParams();
-//   const dispatch = useDispatch();
-
-//   const { selectedProduct, loading, error } = useSelector(
-//     (state) => state.products
-//   );
-
-//   useEffect(() => {
-//     dispatch(fetchProductById(id));
-
-//     return () => dispatch(clearSelectedProduct());
-//   }, [dispatch, id]);
-
-//   if (loading) return <p className="page-message">Loading product...</p>;
-//   if (error) return <p className="page-message error">{error}</p>;
-//   if (!selectedProduct) return <p className="page-message">Product not found.</p>;
-
-//   const product = selectedProduct;
-
-//   return (
-//     <main className="detail-page">
-//       <Link to="/" className="back-link">← Back to products</Link>
-
-//       <div className="detail-layout">
-//         <img
-//           className="detail-image"
-//           src={product.image || "https://placehold.co/600x500?text=CozyHome"}
-//           alt={product.name}
-//         />
-
-//         <div className="detail-info">
-//           <p className="eyebrow">{product.category}</p>
-//           <h1>{product.name}</h1>
-//           <p className="rating">★ {product.rating || "New"}</p>
-//           <h2 className="detail-price">₹{product.price}</h2>
-//           <p>{product.description || "A beautiful addition to your home."}</p>
-
-//           <p>Availability: {product.stock > 0 ? "In Stock" : "Check availability"}</p>
-
-//           <button
-//             className="primary-button"
-//             onClick={() => dispatch(addToCart(product))}
-//           >
-//             Add to Cart
-//           </button>
-//         </div>
-//       </div>
-//     </main>
-//   );
-// }
-
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+
 import {
-  fetchProducts,
   fetchProductById,
+  fetchProducts,
   clearSelectedProduct,
 } from "../features/products/productsSlice";
+
 import { addToCart } from "../features/cart/cartSlice";
+import { addToCompare } from "../features/compare/compareSlice";
+
+import {
+  fetchCollections,
+  createCollection,
+  addProductToCollection,
+} from "../features/collections/collectionsSlice";
+
+import ProductCard from "../components/ProductCard";
+
+import "./ProductDetail.css";
 
 export default function ProductDetail() {
   const { id } = useParams();
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { selectedProduct, items, loading, error } = useSelector(
-    (state) => state.products
+  const selectedProduct = useSelector(
+    (state) => state.products.selectedProduct
   );
 
-  const token = useSelector((state) => state.auth.token);
-  const [quantity, setQuantity] = useState(1);
+  const products = useSelector((state) => state.products.items);
 
+  const loading = useSelector((state) => state.products.loading);
+
+  const token = useSelector((state) => state.auth.token);
+
+  const compareItems = useSelector((state) => state.compare.items);
+
+  const [quantity, setQuantity] = useState(1);
+  const [savingCollection, setSavingCollection] = useState(false);
+  const [collectionMessage, setCollectionMessage] = useState("");
+  const [collectionName, setCollectionName] = useState("");
+  const [isCollectionDialogOpen, setIsCollectionDialogOpen] = useState(false);
+  const [compareMessage, setCompareMessage] = useState("");
+
+  // Fetch product details and products list
   useEffect(() => {
+    dispatch(clearSelectedProduct());
     dispatch(fetchProductById(id));
 
-    return () => dispatch(clearSelectedProduct());
-  }, [dispatch, id]);
-
-  useEffect(() => {
-    if (selectedProduct && items.length === 0) {
+    if (!products || products.length === 0) {
       dispatch(fetchProducts());
     }
-  }, [dispatch, items.length, selectedProduct]);
 
-  useEffect(() => {
     setQuantity(1);
-  }, [id]);
+  }, [dispatch, id]);
 
-  if (loading && !selectedProduct) {
-    return <p className="page-message">Loading product...</p>;
-  }
+  // Similar products from the same category
+  const similarProducts = products
+    .filter((product) => {
+      const currentProductId = String(
+        selectedProduct?._id || selectedProduct?.id
+      );
 
-  if (error && !selectedProduct) {
-    return <p className="page-message error">{error}</p>;
-  }
+      const productId = String(product._id || product.id);
 
-  if (!selectedProduct) {
-    return <p className="page-message">Product not found.</p>;
-  }
-
-  const product = selectedProduct;
-
-  const stock = Number(product.stock) || 0;
-
-  const category = String(product.category || "").trim().toLowerCase();
-  const similarProducts = (items || [])
-    .filter(
-      (item) =>
-        String(item._id || item.id) !== String(product._id || product.id) &&
-        category &&
-        String(item.category || "").trim().toLowerCase() === category
-    )
+      return (
+        productId !== currentProductId &&
+        product.category?.toLowerCase() ===
+          selectedProduct?.category?.toLowerCase()
+      );
+    })
     .slice(0, 4);
 
-  function decreaseQuantity() {
-    setQuantity((current) => Math.max(1, current - 1));
-  }
-
-  function increaseQuantity() {
-    setQuantity((current) =>
-      Math.min(stock > 0 ? stock : 10, current + 1)
-    );
-  }
-
-  function handleAddToCart() {
-    for (let i = 0; i < quantity; i++) {
-      dispatch(addToCart(product));
+  // Increase quantity
+  const increaseQuantity = () => {
+    if (selectedProduct && quantity < selectedProduct.stock) {
+      setQuantity((prev) => prev + 1);
     }
-  }
+  };
 
-  function handleBuyNow() {
+  // Decrease quantity
+  const decreaseQuantity = () => {
+    if (quantity > 1) {
+      setQuantity((prev) => prev - 1);
+    }
+  };
+
+  // Add to Cart
+  const handleAddToCart = () => {
+    if (!selectedProduct) return;
+
+    dispatch(
+      addToCart({
+        ...selectedProduct,
+        quantity,
+      })
+    );
+  };
+
+  // Buy Now
+  const handleBuyNow = () => {
     if (!token) {
-      navigate("/login", {
-        state: { from: "/cart" },
-      });
+      navigate("/login");
       return;
     }
 
-    handleAddToCart();
+    if (!selectedProduct) return;
+
+    dispatch(
+      addToCart({
+        ...selectedProduct,
+        quantity,
+      })
+    );
+
     navigate("/cart");
+  };
+
+  // Save to Dream Collection
+  const handleSaveToDreamCollection = () => {
+    if (!selectedProduct) return;
+
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    setCollectionMessage("");
+    setCollectionName("");
+    setIsCollectionDialogOpen(true);
+  };
+
+  const handleCollectionSubmit = async (event) => {
+    event.preventDefault();
+    if (!selectedProduct || !collectionName.trim()) return;
+
+    try {
+      setSavingCollection(true);
+      setCollectionMessage("");
+      const collections = await dispatch(fetchCollections(token)).unwrap();
+      const normalizedName = collectionName.trim().toLowerCase();
+      const existingCollection = collections.find(
+        (collection) =>
+          collection.name.trim().toLowerCase() === normalizedName
+      );
+      const collection =
+        existingCollection ||
+        (await dispatch(
+          createCollection({
+            name: collectionName.trim(),
+            token,
+          })
+        ).unwrap());
+
+      await dispatch(
+        addProductToCollection({
+          collectionId: collection._id,
+          productId: selectedProduct._id || selectedProduct.id,
+          token,
+        })
+      ).unwrap();
+
+      setIsCollectionDialogOpen(false);
+      setCollectionName("");
+      setCollectionMessage(`Saved to "${collection.name}".`);
+    } catch (error) {
+      console.error("Failed to save product:", error);
+      setCollectionMessage(
+        typeof error === "string"
+          ? error
+          : "Unable to save this product. Please try again."
+      );
+    } finally {
+      setSavingCollection(false);
+    }
+  };
+
+  // Add to Smart Comparison
+  const handleAddToCompare = () => {
+    if (!selectedProduct) return;
+
+    const currentProductId = String(
+      selectedProduct._id || selectedProduct.id
+    );
+
+    const alreadyAdded = compareItems.some(
+      (item) =>       String(item._id || item.id) === currentProductId
+    );
+
+    if (alreadyAdded) {
+      setCompareMessage("This product is already in your comparison list.");
+      return;
+    }
+
+    if (compareItems.length >= 3) {
+      setCompareMessage("You can compare a maximum of 3 products.");
+      return;
+    }
+
+    dispatch(addToCompare(selectedProduct));
+    setCompareMessage("Product added to comparison.");
+  };
+
+  if (loading && !selectedProduct) {
+    return (
+      <div className="product-detail-loading">
+        <h2>Loading product details...</h2>
+      </div>
+    );
+  }
+
+  if (!selectedProduct) {
+    return (
+      <div className="product-detail-not-found">
+        <h2>Product Not Found</h2>
+
+        <p>
+          The product you are looking for may have been removed or does not
+          exist.
+        </p>
+
+        <Link to="/" className="back-to-products">
+          Back to Products
+        </Link>
+      </div>
+    );
   }
 
   return (
-    <main className="detail-page">
-      <Link to="/" className="back-link">
-        ← Back to products
-      </Link>
-
-      <div className="detail-layout">
-        <div className="detail-image-container">
+    <>
+      {/* Main Product Details */}
+      <div className="product-detail-container">
+        <div className="product-detail-image">
           <img
-            className="detail-image"
             src={
-              product.image ||
-              "https://placehold.co/600x500?text=CozyHome"
+              selectedProduct.image ||
+              "https://placehold.co/400x300?text=CozyHome"
             }
-            alt={product.name}
+            alt={selectedProduct.name}
+            onError={(event) => {
+              event.currentTarget.src =
+                "https://placehold.co/400x300?text=CozyHome";
+            }}
           />
         </div>
 
-        <div className="detail-info">
-          <p className="eyebrow">{product.category}</p>
+        <div className="product-detail-info">
+          <Link to="/" className="back-link">
+            ← Back to Products
+          </Link>
 
-          <h1>{product.name}</h1>
+          <h1>{selectedProduct.name}</h1>
 
-          <p className="rating">
-            ★ {product.rating || "New"}
+          <p className="product-detail-category">
+            Category: {selectedProduct.category}
           </p>
 
-          <h2 className="detail-price">
-            ₹{Number(product.price).toFixed(2)}
-          </h2>
+          <div className="product-detail-rating">
+            <span>★</span> {selectedProduct.rating || "New"}
+          </div>
 
-          <p className="detail-description">
-            {product.description ||
-              "A beautiful addition to your home."}
+          <div className="product-detail-price">
+            <span className="current-price">
+              ₹{selectedProduct.price}
+            </span>
+
+            {selectedProduct.oldPrice &&
+              selectedProduct.oldPrice > selectedProduct.price && (
+                <span className="old-price">
+                  ₹{selectedProduct.oldPrice}
+                </span>
+              )}
+          </div>
+
+          <p className="product-detail-description">
+            {selectedProduct.description}
           </p>
 
-          <p className="availability">
-            Availability:{" "}
-            {stock > 0 ? (
-              <span className="in-stock">In Stock</span>
-            ) : (
-              <span className="out-of-stock">Out of Stock</span>
-            )}
+          <p className="product-detail-stock">
+            {selectedProduct.stock > 0
+              ? `Available Stock: ${selectedProduct.stock}`
+              : "Out of Stock"}
           </p>
 
-          <div className="quantity-section">
-            <span>Quantity</span>
+          {selectedProduct.stock > 0 && (
+            <>
+              {/* Quantity Selector */}
+              <div className="quantity-selector">
+                <span>Quantity:</span>
 
-            <div className="quantity-control">
+                <button
+                  type="button"
+                  onClick={decreaseQuantity}
+                  disabled={quantity <= 1}
+                >
+                  -
+                </button>
+
+                <span className="quantity-value">{quantity}</span>
+
+                <button
+                  type="button"
+                  onClick={increaseQuantity}
+                  disabled={quantity >= selectedProduct.stock}
+                >
+                  +
+                </button>
+              </div>
+
+              {/* Cart Buttons */}
+              <div className="product-detail-buttons">
+                <button
+                  type="button"
+                  className="add-to-cart-button"
+                  onClick={handleAddToCart}
+                >
+                  Add to Cart
+                </button>
+
+                <button
+                  type="button"
+                  className="buy-now-button"
+                  onClick={handleBuyNow}
+                >
+                  Buy Now
+                </button>
+              </div>
+
+              {/* Dream Collection */}
               <button
                 type="button"
-                onClick={decreaseQuantity}
-                disabled={quantity <= 1}
-                aria-label="Decrease quantity"
+                className="dream-save-button"
+                onClick={handleSaveToDreamCollection}
+                disabled={savingCollection}
               >
-                −
+                {savingCollection
+                  ? "Saving..."
+                  : "♡ Save to Dream Collection"}
               </button>
+              {collectionMessage && (
+                <p className="product-action-message" role="status">
+                  {collectionMessage}
+                </p>
+              )}
 
-              <span>{quantity}</span>
-
+              {/* Smart Comparison */}
               <button
                 type="button"
-                onClick={increaseQuantity}
-                disabled={stock <= 0 || quantity >= stock}
-                aria-label="Increase quantity"
+                className="compare-add-button"
+                onClick={handleAddToCompare}
               >
-                +
+                ⇄ Add to Compare
               </button>
-            </div>
-          </div>
-
-          <div className="detail-buttons">
-            <button
-              className="primary-button"
-              onClick={handleAddToCart}
-              disabled={stock <= 0}
-            >
-              Add to Cart
-            </button>
-
-            <button
-              className="buy-now-button"
-              onClick={handleBuyNow}
-              disabled={stock <= 0}
-            >
-              Buy Now
-            </button>
-          </div>
-
-          <div className="product-benefits">
-            <div>
-              <strong>Free shipping</strong>
-              <small>On eligible orders</small>
-            </div>
-
-            <div>
-              <strong>Easy returns</strong>
-              <small>Return policy applies</small>
-            </div>
-
-            <div>
-              <strong>Quality guarantee</strong>
-              <small>Quality home products</small>
-            </div>
-          </div>
+              {compareMessage && (
+                <p className="product-action-message" role="status">
+                  {compareMessage}{" "}
+                  {compareMessage === "Product added to comparison." && (
+                    <Link to="/compare">View comparison</Link>
+                  )}
+                </p>
+              )}
+            </>
+          )}
         </div>
       </div>
 
-      <section className="similar-products-section">
-        <h2>You may also like</h2>
-
-        {error ? (
-          <p className="similar-products-empty error">{error}</p>
-        ) : similarProducts.length > 0 ? (
-          <div className="similar-products-grid">
-            {similarProducts.map((item) => (
-              <Link
-                to={`/product/${item._id}`}
-                className="similar-product-card"
-                key={item._id}
+      {isCollectionDialogOpen && (
+        <div className="collection-dialog-backdrop">
+          <form
+            className="collection-dialog"
+            onSubmit={handleCollectionSubmit}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="collection-dialog-title"
+          >
+            <h2 id="collection-dialog-title">Save to a collection</h2>
+            <label htmlFor="collection-name">Collection name</label>
+            <input
+              id="collection-name"
+              type="text"
+              value={collectionName}
+              onChange={(event) => setCollectionName(event.target.value)}
+              placeholder="My Dream Collection"
+              maxLength={60}
+              required
+              autoFocus
+            />
+            {collectionMessage && (
+              <p className="product-action-message" role="alert">
+                {collectionMessage}
+              </p>
+            )}
+            <div className="collection-dialog-actions">
+              <button
+                type="button"
+                onClick={() => setIsCollectionDialogOpen(false)}
+                disabled={savingCollection}
               >
-                <img
-                  src={
-                    item.image ||
-                    "https://placehold.co/300x250?text=CozyHome"
-                  }
-                  alt={item.name}
-                />
+                Cancel
+              </button>
+              <button type="submit" disabled={savingCollection}>
+                {savingCollection ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
-                <h3>{item.name}</h3>
+      {/* Similar Products Section */}
+      {similarProducts.length > 0 && (
+        <section className="similar-products-section">
+          <div className="similar-products-heading">
+            <h2>Similar Products</h2>
 
-                <p>₹{Number(item.price).toFixed(2)}</p>
-              </Link>
+            <p>
+              Discover more products from the {selectedProduct.category}{" "}
+              collection.
+            </p>
+          </div>
+
+          <div className="similar-products-grid">
+            {similarProducts.map((product) => (
+              <ProductCard
+                key={product._id || product.id}
+                product={product}
+              />
             ))}
           </div>
-        ) : (
-          <p className="similar-products-empty">
-            No similar products available.
-          </p>
-        )}
-      </section>
-    </main>
+        </section>
+      )}
+    </>
   );
 }

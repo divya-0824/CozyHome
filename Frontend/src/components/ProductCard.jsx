@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "../features/cart/cartSlice";
 
+
 export default function ProductCard({ product }) {
   const dispatch = useDispatch();
 
