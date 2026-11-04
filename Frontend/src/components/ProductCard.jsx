@@ -1,11 +1,18 @@
 import { Link } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "../features/cart/cartSlice";
 
 export default function ProductCard({ product }) {
   const dispatch = useDispatch();
 
   const id = product._id || product.id;
+  const cartQuantity = useSelector((state) => {
+    const cartItem = state.cart.items.find(
+      (item) => String(item._id || item.id) === String(id)
+    );
+
+    return cartItem?.quantity || 0;
+  });
 
   return (
     <article className="product-card">
@@ -33,7 +40,7 @@ export default function ProductCard({ product }) {
           className="primary-button"
           onClick={() => dispatch(addToCart(product))}
         >
-          Add to Cart
+          {cartQuantity > 0 ? `Add to Cart (${cartQuantity})` : "Add to Cart"}
         </button>
       </div>
     </article>

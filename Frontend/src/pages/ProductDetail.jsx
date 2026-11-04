@@ -63,6 +63,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
+  fetchProducts,
   fetchProductById,
   clearSelectedProduct,
 } from "../features/products/productsSlice";
@@ -73,7 +74,7 @@ export default function ProductDetail() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { selectedProduct, products, loading, error } = useSelector(
+  const { selectedProduct, items, loading, error } = useSelector(
     (state) => state.products
   );
 
@@ -87,14 +88,20 @@ export default function ProductDetail() {
   }, [dispatch, id]);
 
   useEffect(() => {
+    if (selectedProduct && items.length === 0) {
+      dispatch(fetchProducts());
+    }
+  }, [dispatch, items.length, selectedProduct]);
+
+  useEffect(() => {
     setQuantity(1);
   }, [id]);
 
-  if (loading) {
+  if (loading && !selectedProduct) {
     return <p className="page-message">Loading product...</p>;
   }
 
-  if (error) {
+  if (error && !selectedProduct) {
     return <p className="page-message error">{error}</p>;
   }
 
@@ -106,11 +113,13 @@ export default function ProductDetail() {
 
   const stock = Number(product.stock) || 0;
 
-  const similarProducts = (products || [])
+  const category = String(product.category || "").trim().toLowerCase();
+  const similarProducts = (items || [])
     .filter(
       (item) =>
-        String(item._id) !== String(product._id) &&
-        item.category === product.category
+        String(item._id || item.id) !== String(product._id || product.id) &&
+        category &&
+        String(item.category || "").trim().toLowerCase() === category
     )
     .slice(0, 4);
 
@@ -253,7 +262,9 @@ export default function ProductDetail() {
       <section className="similar-products-section">
         <h2>You may also like</h2>
 
-        {similarProducts.length > 0 ? (
+        {error ? (
+          <p className="similar-products-empty error">{error}</p>
+        ) : similarProducts.length > 0 ? (
           <div className="similar-products-grid">
             {similarProducts.map((item) => (
               <Link
