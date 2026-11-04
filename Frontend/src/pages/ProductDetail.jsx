@@ -43,6 +43,9 @@ export default function ProductDetail() {
   const [savingCollection, setSavingCollection] = useState(false);
   const [collectionMessage, setCollectionMessage] = useState("");
   const [collectionName, setCollectionName] = useState("");
+  const [collections, setCollections] = useState([]);
+  const [selectedCollectionId, setSelectedCollectionId] = useState("");
+  const [loadingCollections, setLoadingCollections] = useState(false);
   const [isCollectionDialogOpen, setIsCollectionDialogOpen] = useState(false);
   const [compareMessage, setCompareMessage] = useState("");
 
@@ -121,7 +124,7 @@ export default function ProductDetail() {
   };
 
   // Save to Dream Collection
-  const handleSaveToDreamCollection = () => {
+  const handleSaveToDreamCollection = async () => {
     if (!selectedProduct) return;
 
     if (!token) {
@@ -131,30 +134,55 @@ export default function ProductDetail() {
 
     setCollectionMessage("");
     setCollectionName("");
+    setCollections([]);
+    setSelectedCollectionId("");
     setIsCollectionDialogOpen(true);
+    setLoadingCollections(true);
+
+    try {
+      const loadedCollections = await dispatch(
+        fetchCollections(token)
+      ).unwrap();
+      setCollections(loadedCollections);
+      setSelectedCollectionId(
+        loadedCollections.length > 0 ? loadedCollections[0]._id : "new"
+      );
+    } catch (error) {
+      console.error("Failed to load collections:", error);
+      setCollectionMessage(
+        typeof error === "string"
+          ? error
+          : "Unable to load your collections. Please try again."
+      );
+    } finally {
+      setLoadingCollections(false);
+    }
   };
 
   const handleCollectionSubmit = async (event) => {
     event.preventDefault();
-    if (!selectedProduct || !collectionName.trim()) return;
+    if (!selectedProduct || !selectedCollectionId) return;
+    if (selectedCollectionId === "new" && !collectionName.trim()) return;
 
     try {
       setSavingCollection(true);
       setCollectionMessage("");
-      const collections = await dispatch(fetchCollections(token)).unwrap();
-      const normalizedName = collectionName.trim().toLowerCase();
-      const existingCollection = collections.find(
-        (collection) =>
-          collection.name.trim().toLowerCase() === normalizedName
-      );
       const collection =
-        existingCollection ||
-        (await dispatch(
-          createCollection({
-            name: collectionName.trim(),
-            token,
-          })
-        ).unwrap());
+        selectedCollectionId === "new"
+          ? await dispatch(
+              createCollection({
+                name: collectionName.trim(),
+                token,
+              })
+            ).unwrap()
+          : collections.find(
+              (item) => item._id === selectedCollectionId
+            );
+
+      if (!collection) {
+        setCollectionMessage("Please choose a valid collection.");
+        return;
+      }
 
       await dispatch(
         addProductToCollection({
@@ -335,7 +363,7 @@ export default function ProductDetail() {
                 type="button"
                 className="dream-save-button"
                 onClick={handleSaveToDreamCollection}
-                disabled={savingCollection}
+                disabled={savingCollection || loadingCollections}
               >
                 {savingCollection
                   ? "Saving..."
@@ -378,17 +406,48 @@ export default function ProductDetail() {
             aria-labelledby="collection-dialog-title"
           >
             <h2 id="collection-dialog-title">Save to a collection</h2>
-            <label htmlFor="collection-name">Collection name</label>
-            <input
-              id="collection-name"
-              type="text"
-              value={collectionName}
-              onChange={(event) => setCollectionName(event.target.value)}
-              placeholder="My Dream Collection"
-              maxLength={60}
-              required
-              autoFocus
-            />
+            {loadingCollections ? (
+              <p>Loading your collections...</p>
+            ) : (
+              <>
+                <label htmlFor="collection-choice">
+                  Choose an existing collection or create a new one
+                </label>
+                <select
+                  id="collection-choice"
+                  value={selectedCollectionId}
+                  onChange={(event) =>
+                    setSelectedCollectionId(event.target.value)
+                  }
+                  required
+                >
+                  <option value="" disabled>
+                    Select a collection
+                  </option>
+                  {collections.map((collection) => (
+                    <option key={collection._id} value={collection._id}>
+                      {collection.name}
+                    </option>
+                  ))}
+                  <option value="new">+ Create a new collection</option>
+                </select>
+                {selectedCollectionId === "new" && (
+                  <>
+                    <label htmlFor="collection-name">New collection name</label>
+                    <input
+                      id="collection-name"
+                      type="text"
+                      value={collectionName}
+                      onChange={(event) => setCollectionName(event.target.value)}
+                      placeholder="My Dream Collection"
+                      maxLength={60}
+                      required
+                      autoFocus
+                    />
+                  </>
+                )}
+              </>
+            )}
             {collectionMessage && (
               <p className="product-action-message" role="alert">
                 {collectionMessage}
@@ -397,12 +456,22 @@ export default function ProductDetail() {
             <div className="collection-dialog-actions">
               <button
                 type="button"
-                onClick={() => setIsCollectionDialogOpen(false)}
+                onClick={() => {
+                  setIsCollectionDialogOpen(false);
+                  setCollectionMessage("");
+                }}
                 disabled={savingCollection}
               >
                 Cancel
               </button>
-              <button type="submit" disabled={savingCollection}>
+              <button
+                type="submit"
+                disabled={
+                  savingCollection ||
+                  loadingCollections ||
+                  !selectedCollectionId
+                }
+              >
                 {savingCollection ? "Saving..." : "Save"}
               </button>
             </div>
