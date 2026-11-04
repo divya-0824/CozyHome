@@ -1,4 +1,3 @@
-
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useSearchParams } from "react-router-dom";
@@ -39,30 +38,25 @@ export default function ProductList() {
 
   const search = searchParams.get("search") || "";
 
-  // Fetch products from MongoDB
   useEffect(() => {
     dispatch(fetchProducts());
   }, [dispatch]);
 
-  // Get available categories
   const categories = [
     ...new Set(
       items.map((product) => product.category).filter(Boolean)
     ),
   ];
 
-  // Search, filter and sort products
   const filteredProducts = useMemo(() => {
     let result = [...items];
 
-    // Category filter
     if (activeFilters.categories.length > 0) {
       result = result.filter((product) =>
         activeFilters.categories.includes(product.category)
       );
     }
 
-    // Minimum price
     if (activeFilters.minPrice !== "") {
       result = result.filter(
         (product) =>
@@ -70,7 +64,6 @@ export default function ProductList() {
       );
     }
 
-    // Maximum price
     if (activeFilters.maxPrice !== "") {
       result = result.filter(
         (product) =>
@@ -78,7 +71,6 @@ export default function ProductList() {
       );
     }
 
-    // Rating filter
     if (activeFilters.minRating > 0) {
       result = result.filter(
         (product) =>
@@ -86,7 +78,6 @@ export default function ProductList() {
       );
     }
 
-    // Search by name, category or description
     if (search.trim()) {
       const searchText = search.trim().toLowerCase();
 
@@ -105,7 +96,6 @@ export default function ProductList() {
       });
     }
 
-    // Sorting
     if (sort === "low") {
       result.sort((a, b) => Number(a.price) - Number(b.price));
     } else if (sort === "high") {
@@ -140,7 +130,6 @@ export default function ProductList() {
     });
   }
 
-  // Toggle category selection
   function toggleCategory(category) {
     setDraftFilters((current) => ({
       ...current,
@@ -151,7 +140,6 @@ export default function ProductList() {
     }));
   }
 
-  // Apply filters
   function applyFilters(event) {
     event.preventDefault();
 
@@ -161,7 +149,6 @@ export default function ProductList() {
     });
   }
 
-  // Clear filters
   function clearFilters() {
     const emptyFilters = {
       categories: [],

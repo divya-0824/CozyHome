@@ -49,7 +49,6 @@ export default function ProductDetail() {
   const [isCollectionDialogOpen, setIsCollectionDialogOpen] = useState(false);
   const [compareMessage, setCompareMessage] = useState("");
 
-  // Fetch product details and products list
   useEffect(() => {
     dispatch(clearSelectedProduct());
     dispatch(fetchProductById(id));
@@ -61,7 +60,6 @@ export default function ProductDetail() {
     setQuantity(1);
   }, [dispatch, id]);
 
-  // Similar products from the same category
   const similarProducts = products
     .filter((product) => {
       const currentProductId = String(
@@ -78,21 +76,18 @@ export default function ProductDetail() {
     })
     .slice(0, 4);
 
-  // Increase quantity
   const increaseQuantity = () => {
     if (selectedProduct && quantity < selectedProduct.stock) {
       setQuantity((prev) => prev + 1);
     }
   };
 
-  // Decrease quantity
   const decreaseQuantity = () => {
     if (quantity > 1) {
       setQuantity((prev) => prev - 1);
     }
   };
 
-  // Add to Cart
   const handleAddToCart = () => {
     if (!selectedProduct) return;
 
@@ -104,7 +99,6 @@ export default function ProductDetail() {
     );
   };
 
-  // Buy Now
   const handleBuyNow = () => {
     if (!token) {
       navigate("/login");
@@ -123,7 +117,6 @@ export default function ProductDetail() {
     navigate("/cart");
   };
 
-  // Save to Dream Collection
   const handleSaveToDreamCollection = async () => {
     if (!selectedProduct) return;
 
@@ -207,7 +200,6 @@ export default function ProductDetail() {
     }
   };
 
-  // Add to Smart Comparison
   const handleAddToCompare = () => {
     if (!selectedProduct) return;
 

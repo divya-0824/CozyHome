@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -16,7 +15,7 @@ export default function Cart() {
 
   const { items, coupon } = useSelector((state) => state.cart);
 
-  // Check whether the user is logged in
+  
   const token = useSelector((state) => state.auth.token);
 
   const [couponInput, setCouponInput] = useState("");
@@ -42,7 +41,7 @@ export default function Cart() {
     }
   }
 
-  // Checkout login protection
+ 
   function handleCheckout() {
     if (!token) {
       alert("Please login to continue checkout.");

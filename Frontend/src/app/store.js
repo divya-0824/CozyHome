@@ -1,4 +1,3 @@
-
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import { persistStore, persistReducer } from "redux-persist";
 
@@ -8,7 +7,7 @@ import authReducer from "../features/auth/authSlice";
 import collectionsReducer from "../features/collections/collectionsSlice";
 import compareReducer from "../features/compare/compareSlice";
 
-// Browser localStorage
+
 const storage = {
   getItem: (key) => Promise.resolve(window.localStorage.getItem(key)),
 
