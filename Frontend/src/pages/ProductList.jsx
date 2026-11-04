@@ -129,6 +129,17 @@ export default function ProductList() {
     return filteredProducts.slice(startIndex, startIndex + PRODUCTS_PER_PAGE);
   }, [filteredProducts, visiblePage]);
 
+  function changePage(page) {
+    setPaginationState({
+      key: paginationKey,
+      page,
+    });
+    document.getElementById("products")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }
+
   // Toggle category selection
   function toggleCategory(category) {
     setDraftFilters((current) => ({
@@ -381,12 +392,7 @@ export default function ProductList() {
                       className="pagination-arrow"
                       aria-label="Go to previous page"
                       disabled={visiblePage === 1}
-                      onClick={() =>
-                        setPaginationState({
-                          key: paginationKey,
-                          page: visiblePage - 1,
-                        })
-                      }
+                      onClick={() => changePage(visiblePage - 1)}
                     >
                       &larr;
                     </button>
@@ -399,12 +405,7 @@ export default function ProductList() {
                           className={`pagination-page${page === visiblePage ? " pagination-page-active" : ""}`}
                           aria-label={`Go to page ${page}`}
                           aria-current={page === visiblePage ? "page" : undefined}
-                          onClick={() =>
-                            setPaginationState({
-                              key: paginationKey,
-                              page,
-                            })
-                          }
+                          onClick={() => changePage(page)}
                         >
                           {page}
                         </button>
@@ -416,12 +417,7 @@ export default function ProductList() {
                       className="pagination-arrow"
                       aria-label="Go to next page"
                       disabled={visiblePage === totalPages}
-                      onClick={() =>
-                        setPaginationState({
-                          key: paginationKey,
-                          page: visiblePage + 1,
-                        })
-                      }
+                      onClick={() => changePage(visiblePage + 1)}
                     >
                       &rarr;
                     </button>
