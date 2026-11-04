@@ -1,8 +1,6 @@
-
 const DreamCollection = require("../models/DreamCollection");
 const Product = require("../models/Product");
 
-// GET ALL COLLECTIONS FOR LOGGED-IN USER
 const getCollections = async (req, res) => {
   try {
     const collections = await DreamCollection.find({
@@ -15,7 +13,6 @@ const getCollections = async (req, res) => {
   }
 };
 
-// CREATE COLLECTION
 const createCollection = async (req, res) => {
   try {
     const { name } = req.body;
@@ -38,7 +35,6 @@ const createCollection = async (req, res) => {
   }
 };
 
-// ADD PRODUCT TO COLLECTION
 const addProduct = async (req, res) => {
   try {
     const { productId } = req.body;
@@ -89,7 +85,6 @@ const addProduct = async (req, res) => {
   }
 };
 
-// REMOVE PRODUCT FROM COLLECTION
 const removeProduct = async (req, res) => {
   try {
     const collection = await DreamCollection.findOne({
@@ -116,7 +111,6 @@ const removeProduct = async (req, res) => {
   }
 };
 
-// RENAME COLLECTION
 const renameCollection = async (req, res) => {
   try {
     const { name } = req.body;
@@ -151,7 +145,6 @@ const renameCollection = async (req, res) => {
   }
 };
 
-// DELETE COLLECTION
 const deleteCollection = async (req, res) => {
   try {
     const collection = await DreamCollection.findOneAndDelete({

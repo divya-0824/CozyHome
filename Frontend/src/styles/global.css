@@ -711,8 +711,6 @@ button {
   }
 }
 
-/* Product Detail Page */
-
 .detail-page {
   max-width: 1200px;
   margin: 30px auto;
@@ -796,8 +794,6 @@ button {
   font-weight: 600;
 }
 
-/* Quantity */
-
 .quantity-section {
   display: flex;
   align-items: center;
@@ -834,8 +830,6 @@ button {
   font-weight: 600;
 }
 
-/* Add to Cart and Buy Now */
-
 .detail-buttons {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -866,8 +860,6 @@ button {
   color: #ffffff;
 }
 
-/* Benefits */
-
 .product-benefits {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -892,8 +884,6 @@ button {
   font-size: 11px;
   color: var(--muted);
 }
-
-/* Similar Products */
 
 .similar-products-section {
   margin-top: 35px;
